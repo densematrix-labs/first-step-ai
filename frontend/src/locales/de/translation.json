@@ -1,0 +1,21 @@
+{
+  "app": {
+    "title": "First Step AI",
+    "tagline": "Sag mir den nächsten Schritt",
+    "description": "Überfordert? Gib eine Aufgabe ein und ich sage dir genau EINE Sache, die du jetzt tun sollst.",
+    "placeholder": "Was möchtest du erreichen?",
+    "examples": { "title": "Probiere:", "1": "Ich möchte programmieren lernen", "2": "Ich möchte ein Unternehmen gründen", "3": "Ich möchte fit werden" },
+    "button": { "getStep": "Nächsten Schritt holen", "loading": "Denke nach...", "done": "Fertig! Was kommt als nächstes?", "tryAnother": "Andere Aufgabe" }
+  },
+  "step": { "title": "Dein nächster Schritt", "duration": "Benötigte Zeit", "howToKnow": "Fertig wenn", "tip": "Tipp" },
+  "pricing": {
+    "title": "Einfache Preise",
+    "subtitle": "Unbegrenzte nächste Schritte für deine Ziele",
+    "free": { "title": "Kostenlos", "description": "Einmal testen", "features": ["1 kostenloser Schritt", "Keine Anmeldung"], "cta": "Kostenlos testen" },
+    "starter": { "title": "Starter", "price": "$4.99", "description": "5 Schritte", "features": ["5 Schritte", "Alle Sprachen", "Kein Ablauf"], "cta": "Loslegen" },
+    "pro": { "title": "Pro", "price": "$9.99", "description": "15 Schritte", "features": ["15 Schritte", "Alle Sprachen", "Kein Ablauf", "Priority Support"], "cta": "Pro werden", "popular": "Beliebt" }
+  },
+  "success": { "title": "Zahlung erfolgreich!", "description": "Schritte wurden hinzugefügt.", "steps": "Schritte verfügbar", "cta": "Jetzt nutzen" },
+  "common": { "language": "Sprache", "pricing": "Preise", "home": "Start" },
+  "footer": { "poweredBy": "Powered by", "company": "DenseMatrix" }
+}

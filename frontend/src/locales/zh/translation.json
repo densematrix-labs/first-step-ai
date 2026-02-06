@@ -1,0 +1,66 @@
+{
+  "app": {
+    "title": "下一步 AI",
+    "tagline": "告诉我下一步该做什么",
+    "description": "感到不知所措？输入任何任务或目标，我会告诉你现在该做的那一件事。",
+    "placeholder": "你想完成什么？",
+    "examples": {
+      "title": "试试这些：",
+      "1": "我想学编程",
+      "2": "我想创业",
+      "3": "我想健身"
+    },
+    "button": {
+      "getStep": "获取下一步",
+      "loading": "思考中...",
+      "done": "完成了！下一步是什么？",
+      "tryAnother": "换一个任务"
+    }
+  },
+  "step": {
+    "title": "你的下一步",
+    "duration": "预计时间",
+    "howToKnow": "完成标准",
+    "tip": "小贴士"
+  },
+  "pricing": {
+    "title": "简单定价",
+    "subtitle": "获取无限的下一步，实现你的目标",
+    "free": {
+      "title": "免费试用",
+      "description": "试用一次",
+      "features": ["1次免费使用", "无需注册"],
+      "cta": "免费试用"
+    },
+    "starter": {
+      "title": "入门版",
+      "price": "$4.99",
+      "description": "5次使用",
+      "features": ["5次下一步", "支持所有语言", "永不过期"],
+      "cta": "立即开始"
+    },
+    "pro": {
+      "title": "专业版",
+      "price": "$9.99",
+      "description": "15次使用",
+      "features": ["15次下一步", "支持所有语言", "永不过期", "优先支持"],
+      "cta": "升级专业版",
+      "popular": "最受欢迎"
+    }
+  },
+  "success": {
+    "title": "支付成功！",
+    "description": "使用次数已添加到您的账户。",
+    "steps": "次可用",
+    "cta": "开始使用"
+  },
+  "common": {
+    "language": "语言",
+    "pricing": "价格",
+    "home": "首页"
+  },
+  "footer": {
+    "poweredBy": "技术支持",
+    "company": "DenseMatrix"
+  }
+}

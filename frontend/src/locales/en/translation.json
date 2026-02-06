@@ -1,0 +1,66 @@
+{
+  "app": {
+    "title": "First Step AI",
+    "tagline": "Just tell me the next step",
+    "description": "Feeling overwhelmed? Enter any task or goal, and I'll tell you exactly ONE thing to do right now.",
+    "placeholder": "What do you want to accomplish?",
+    "examples": {
+      "title": "Try these:",
+      "1": "I want to learn programming",
+      "2": "I want to start a business",
+      "3": "I want to get fit"
+    },
+    "button": {
+      "getStep": "Get My Next Step",
+      "loading": "Thinking...",
+      "done": "Done! What's next?",
+      "tryAnother": "Try another task"
+    }
+  },
+  "step": {
+    "title": "Your Next Step",
+    "duration": "Time needed",
+    "howToKnow": "You'll know you're done when",
+    "tip": "Pro tip"
+  },
+  "pricing": {
+    "title": "Simple Pricing",
+    "subtitle": "Get unlimited next steps to crush your goals",
+    "free": {
+      "title": "Free Trial",
+      "description": "Try it once",
+      "features": ["1 free step", "No signup required"],
+      "cta": "Try Free"
+    },
+    "starter": {
+      "title": "Starter",
+      "price": "$4.99",
+      "description": "5 steps",
+      "features": ["5 next steps", "All languages", "No expiration"],
+      "cta": "Get Started"
+    },
+    "pro": {
+      "title": "Pro",
+      "price": "$9.99",
+      "description": "15 steps",
+      "features": ["15 next steps", "All languages", "No expiration", "Priority support"],
+      "cta": "Go Pro",
+      "popular": "Most Popular"
+    }
+  },
+  "success": {
+    "title": "Payment Successful!",
+    "description": "Your steps have been added to your account.",
+    "steps": "steps available",
+    "cta": "Start Using Your Steps"
+  },
+  "common": {
+    "language": "Language",
+    "pricing": "Pricing",
+    "home": "Home"
+  },
+  "footer": {
+    "poweredBy": "Powered by",
+    "company": "DenseMatrix"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "app": {
+    "title": "First Step AI",
+    "tagline": "다음 단계를 알려줘",
+    "description": "압도당하고 계신가요? 작업을 입력하면 지금 당장 해야 할 한 가지를 알려드립니다.",
+    "placeholder": "무엇을 달성하고 싶으신가요?",
+    "examples": { "title": "이것을 시도해 보세요:", "1": "프로그래밍을 배우고 싶어요", "2": "사업을 시작하고 싶어요", "3": "건강해지고 싶어요" },
+    "button": { "getStep": "다음 단계 받기", "loading": "생각 중...", "done": "완료! 다음은?", "tryAnother": "다른 작업 시도" }
+  },
+  "step": { "title": "당신의 다음 단계", "duration": "소요 시간", "howToKnow": "완료 기준", "tip": "팁" },
+  "pricing": {
+    "title": "심플한 가격",
+    "subtitle": "목표 달성을 위한 무제한 다음 단계",
+    "free": { "title": "무료 체험", "description": "한 번 체험", "features": ["1회 무료", "가입 불필요"], "cta": "무료 체험" },
+    "starter": { "title": "스타터", "price": "$4.99", "description": "5회", "features": ["5회 단계", "모든 언어", "만료 없음"], "cta": "시작하기" },
+    "pro": { "title": "프로", "price": "$9.99", "description": "15회", "features": ["15회 단계", "모든 언어", "만료 없음", "우선 지원"], "cta": "프로 되기", "popular": "인기" }
+  },
+  "success": { "title": "결제 성공!", "description": "단계가 계정에 추가되었습니다.", "steps": "회 사용 가능", "cta": "사용 시작" },
+  "common": { "language": "언어", "pricing": "가격", "home": "홈" },
+  "footer": { "poweredBy": "Powered by", "company": "DenseMatrix" }
+}

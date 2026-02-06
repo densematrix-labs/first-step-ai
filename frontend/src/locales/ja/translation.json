@@ -1,0 +1,36 @@
+{
+  "app": {
+    "title": "First Step AI",
+    "tagline": "次のステップを教えて",
+    "description": "圧倒されていますか？タスクや目標を入力すると、今すぐやるべき1つのことをお伝えします。",
+    "placeholder": "何を達成したいですか？",
+    "examples": {
+      "title": "試してみて：",
+      "1": "プログラミングを学びたい",
+      "2": "起業したい",
+      "3": "健康になりたい"
+    },
+    "button": {
+      "getStep": "次のステップを取得",
+      "loading": "考え中...",
+      "done": "完了！次は？",
+      "tryAnother": "別のタスクを試す"
+    }
+  },
+  "step": {
+    "title": "あなたの次のステップ",
+    "duration": "所要時間",
+    "howToKnow": "完了の目安",
+    "tip": "ヒント"
+  },
+  "pricing": {
+    "title": "シンプルな料金",
+    "subtitle": "無制限の次のステップで目標を達成",
+    "free": { "title": "無料トライアル", "description": "1回試す", "features": ["1回無料", "登録不要"], "cta": "無料で試す" },
+    "starter": { "title": "スターター", "price": "$4.99", "description": "5回", "features": ["5回のステップ", "全言語対応", "有効期限なし"], "cta": "始める" },
+    "pro": { "title": "プロ", "price": "$9.99", "description": "15回", "features": ["15回のステップ", "全言語対応", "有効期限なし", "優先サポート"], "cta": "プロになる", "popular": "人気" }
+  },
+  "success": { "title": "支払い完了！", "description": "ステップがアカウントに追加されました。", "steps": "回利用可能", "cta": "使い始める" },
+  "common": { "language": "言語", "pricing": "料金", "home": "ホーム" },
+  "footer": { "poweredBy": "Powered by", "company": "DenseMatrix" }
+}
