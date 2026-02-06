@@ -69,9 +69,14 @@ async def track_requests(request: Request, call_next):
     return response
 
 
+# Import payment routes
+from .api.v1 import payment, tokens
+
 # Routes
 app.include_router(metrics_router)
 app.include_router(next_step.router, prefix="/api/v1", tags=["Next Step"])
+app.include_router(payment.router, prefix="/api/v1", tags=["Payment"])
+app.include_router(tokens.router, prefix="/api/v1", tags=["Tokens"])
 
 
 @app.get("/health")
