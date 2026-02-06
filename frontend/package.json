@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "generate-seo": "node programmatic-seo/generate-pages.js || echo 'SEO generation skipped'"
+    "generate-seo": "node scripts/generate-seo.js"
   },
   "dependencies": {
     "react": "^18.2.0",

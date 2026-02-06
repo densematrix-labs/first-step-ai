@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://first-step.demo.densematrix.ai/sitemap.xml
