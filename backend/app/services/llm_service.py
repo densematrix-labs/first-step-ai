@@ -82,6 +82,12 @@ async def generate_next_step(
         result = response.json()
         content = result["choices"][0]["message"]["content"]
         
+        # Clean markdown code block if present
+        if content.startswith("```"):
+            # Remove ```json and ``` markers
+            lines = content.split("\n")
+            content = "\n".join(lines[1:-1])
+        
         # Parse JSON response
         step_data = json.loads(content)
         return Step(
