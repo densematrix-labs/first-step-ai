@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import LanguageSwitcher from '../components/LanguageSwitcher'
+import { getFingerprint } from '../lib/fingerprint'
 
 interface Step {
   action: string
@@ -13,10 +14,12 @@ interface Step {
 
 export default function HomePage() {
   const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
   const [task, setTask] = useState('')
   const [step, setStep] = useState<Step | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showPaymentPrompt, setShowPaymentPrompt] = useState(false)
 
   const examples = [
     t('app.examples.1'),
@@ -31,17 +34,29 @@ export default function HomePage() {
     setLoading(true)
     setError(null)
     setStep(null)
+    setShowPaymentPrompt(false)
 
     try {
+      const deviceId = await getFingerprint()
+      
       const response = await fetch('/api/v1/next-step', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Device-Id': deviceId,
+        },
         body: JSON.stringify({
           task: task.trim(),
           language: i18n.language,
           history: [],
         }),
       })
+
+      if (response.status === 402) {
+        // Payment required
+        setShowPaymentPrompt(true)
+        return
+      }
 
       if (!response.ok) {
         throw new Error('Failed to get next step')
@@ -63,6 +78,7 @@ export default function HomePage() {
   const handleReset = () => {
     setTask('')
     setStep(null)
+    setShowPaymentPrompt(false)
   }
 
   return (
@@ -82,7 +98,32 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main className="px-4 py-12 max-w-2xl mx-auto">
-        {!step ? (
+        {showPaymentPrompt ? (
+          /* Payment Required Prompt */
+          <div className="animate-fade-in text-center">
+            <div className="text-6xl mb-6">🔒</div>
+            <h2 className="text-2xl font-bold text-surface-900 mb-4">
+              Free Trial Exhausted
+            </h2>
+            <p className="text-surface-600 mb-8">
+              You've used your free step. Purchase more to continue your journey!
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                to="/pricing"
+                className="py-3 px-6 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition"
+              >
+                View Pricing
+              </Link>
+              <button
+                onClick={handleReset}
+                className="py-3 px-6 bg-surface-100 text-surface-700 font-semibold rounded-xl hover:bg-surface-200 transition"
+              >
+                Try Different Task
+              </button>
+            </div>
+          </div>
+        ) : !step ? (
           <div className="animate-fade-in">
             {/* Hero */}
             <div className="text-center mb-10">

@@ -24,3 +24,5 @@ class Step(BaseModel):
 class NextStepResponse(BaseModel):
     step: Step
     tokens_used: int = 1
+    remaining_tokens: int = 0
+    is_free_trial: bool = False
