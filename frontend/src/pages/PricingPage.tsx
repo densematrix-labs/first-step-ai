@@ -1,149 +1,148 @@
-/**
- * Pricing Page Template — Customize products, features, and styling.
- * Copy to: src/pages/PricingPage.tsx
- * Customize: `products` array, `features` list, i18n keys.
- */
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { createCheckout } from '@/services/api'
-import { getDeviceId } from '@/lib/fingerprint'
-import { useToast } from '@/hooks/use-toast'
+import { Link } from 'react-router-dom'
+import clsx from 'clsx'
+import LanguageSwitcher from '../components/LanguageSwitcher'
+import { getFingerprint } from '../lib/fingerprint'
 
-// ← Customize: define your product tiers
-const products = [
-  {
-    sku: 'pack_3',
-    name: '3 Credits',
-    price_cents: 799,
-    generations: 3,
-    discount_percent: null,
-    popular: true,
-  },
-  {
-    sku: 'pack_10',
-    name: '10 Credits',
-    price_cents: 1999,
-    generations: 10,
-    discount_percent: 33,
-    popular: false,
-  },
-]
-
-// ← Customize: list what's included
-const features = [
-  'Feature 1 description',
-  'Feature 2 description',
-  'Feature 3 description',
-]
-
-function formatCurrency(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`
+interface Plan {
+  key: string
+  price: string
+  highlighted: boolean
+  productSku: string
 }
+
+const plans: Plan[] = [
+  { key: 'free', price: '$0', highlighted: false, productSku: '' },
+  { key: 'starter', price: '$4.99', highlighted: false, productSku: 'pack_5' },
+  { key: 'pro', price: '$9.99', highlighted: true, productSku: 'pack_15' },
+]
 
 export default function PricingPage() {
   const { t } = useTranslation()
-  const { toast } = useToast()
   const [loading, setLoading] = useState<string | null>(null)
 
-  const handlePurchase = async (sku: string) => {
-    setLoading(sku)
+  const handlePurchase = async (plan: Plan) => {
+    if (plan.key === 'free') {
+      window.location.href = '/'
+      return
+    }
+
+    setLoading(plan.key)
+    
     try {
-      const deviceId = await getDeviceId()
-      const response = await createCheckout({
-        product_sku: sku,
-        device_id: deviceId,
-        success_url: `${window.location.origin}/payment/success`,
-        cancel_url: `${window.location.origin}/pricing`,
+      const deviceId = await getFingerprint()
+      const successUrl = `${window.location.origin}/payment/success`
+      const cancelUrl = `${window.location.origin}/pricing`
+
+      const response = await fetch('/api/v1/payment/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_sku: plan.productSku,
+          device_id: deviceId,
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+        }),
       })
-      window.location.href = response.checkout_url
-    } catch {
-      toast({
-        title: 'Payment Error',
-        description: 'Failed to create checkout session. Please try again.',
-        variant: 'destructive',
-      })
+
+      if (!response.ok) throw new Error('Failed to create checkout')
+
+      const data = await response.json()
+      window.location.href = data.checkout_url
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Failed to start checkout. Please try again.')
     } finally {
       setLoading(null)
     }
   }
 
   return (
-    <div className="container py-20">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">{t('pricing.title')}</h1>
-        <p className="text-xl text-muted-foreground">{t('pricing.subtitle')}</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
+      <header className="px-4 py-4 flex justify-between items-center max-w-4xl mx-auto">
+        <Link to="/" className="text-xl font-bold text-emerald-700">
+          👣 {t('app.title')}
+        </Link>
+        <div className="flex items-center gap-4">
+          <Link to="/" className="text-surface-600 hover:text-emerald-600 transition">
+            {t('common.home')}
+          </Link>
+          <LanguageSwitcher />
+        </div>
+      </header>
 
-      <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-        {products.map((product) => (
-          <Card
-            key={product.sku}
-            className={`relative ${
-              product.popular ? 'border-primary shadow-lg scale-105' : ''
-            }`}
-          >
-            {product.popular && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                  Popular
-                </span>
-              </div>
-            )}
+      <main className="px-4 py-12 max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-surface-900 mb-4">
+            {t('pricing.title')}
+          </h1>
+          <p className="text-lg text-surface-600">
+            {t('pricing.subtitle')}
+          </p>
+        </div>
 
-            <CardHeader className="text-center">
-              <CardTitle className="text-xl">{product.name}</CardTitle>
-              <CardDescription>
-                {product.generations} generations
-              </CardDescription>
-              <div className="mt-4">
-                <span className="text-4xl font-bold">
-                  {formatCurrency(product.price_cents)}
-                </span>
-                {product.discount_percent && (
-                  <span className="ml-2 text-sm text-green-600 font-medium">
-                    Save {product.discount_percent}%
+        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          {plans.map((plan) => (
+            <div
+              key={plan.key}
+              className={clsx(
+                'relative bg-white rounded-2xl p-6 border-2 transition',
+                plan.highlighted
+                  ? 'border-emerald-500 shadow-lg scale-105'
+                  : 'border-surface-200 hover:border-surface-300'
+              )}
+            >
+              {plan.highlighted && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-emerald-500 text-white text-sm font-medium px-3 py-1 rounded-full">
+                    {t(`pricing.${plan.key}.popular`)}
                   </span>
-                )}
+                </div>
+              )}
+
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold text-surface-900 mb-2">
+                  {t(`pricing.${plan.key}.title`)}
+                </h3>
+                <div className="text-3xl font-bold text-emerald-600 mb-2">
+                  {t(`pricing.${plan.key}.price`)}
+                </div>
+                <p className="text-surface-500">
+                  {t(`pricing.${plan.key}.description`)}
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                {formatCurrency(Math.round(product.price_cents / product.generations))}{' '}
-                per generation
-              </p>
-            </CardHeader>
 
-            <CardContent>
-              <Button
-                className="w-full mb-6"
-                variant={product.popular ? 'default' : 'outline'}
-                disabled={loading !== null}
-                onClick={() => handlePurchase(product.sku)}
-              >
-                {loading === product.sku ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  'Buy Now'
-                )}
-              </Button>
-
-              <div className="space-y-3">
-                <p className="text-sm font-medium">Includes:</p>
-                {features.map((feature, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-600 mt-0.5" />
-                    <span className="text-sm text-muted-foreground">{feature}</span>
-                  </div>
+              <ul className="space-y-3 mb-6">
+                {(t(`pricing.${plan.key}.features`, { returnObjects: true }) as string[]).map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2 text-surface-700">
+                    <span className="text-emerald-500">✓</span>
+                    {feature}
+                  </li>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </ul>
+
+              <button
+                onClick={() => handlePurchase(plan)}
+                disabled={loading === plan.key}
+                className={clsx(
+                  'w-full py-3 px-4 font-semibold rounded-xl transition',
+                  loading === plan.key && 'opacity-50 cursor-not-allowed',
+                  plan.highlighted
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    : 'bg-surface-100 text-surface-700 hover:bg-surface-200'
+                )}
+              >
+                {loading === plan.key ? 'Loading...' : t(`pricing.${plan.key}.cta`)}
+              </button>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      <footer className="px-4 py-8 text-center text-sm text-surface-500">
+        {t('footer.poweredBy')} <a href="https://densematrix.ai" className="text-emerald-600 hover:underline">{t('footer.company')}</a>
+      </footer>
     </div>
   )
 }
