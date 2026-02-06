@@ -74,8 +74,7 @@ async def generate_next_step(
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_message}
                 ],
-                "temperature": 0.7,
-                "response_format": {"type": "json_object"}
+                "temperature": 0.7
             }
         )
         response.raise_for_status()

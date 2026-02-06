@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # LLM Proxy
     LLM_PROXY_URL: str = "https://llm-proxy.densematrix.ai"
     LLM_PROXY_KEY: str = ""
-    LLM_MODEL: str = "gemini-2.0-flash"
+    LLM_MODEL: str = "gemini-2.5-flash"
     
     # CORS
     CORS_ORIGINS: list = ["*"]
