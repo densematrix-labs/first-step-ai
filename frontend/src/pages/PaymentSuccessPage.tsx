@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { getFingerprint } from '../lib/fingerprint'
 
 export default function PaymentSuccessPage() {
   const { t } = useTranslation()
-  const [searchParams] = useSearchParams()
   const [tokens, setTokens] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
