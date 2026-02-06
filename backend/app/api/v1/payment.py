@@ -1,24 +1,33 @@
 """
-Creem Payment Router — Checkout + Webhook handling.
-Copy to: backend/app/api/v1/payment.py
-Customize: PRODUCTS dict, handle_checkout_completed logic.
+Simplified Payment Router for First Step AI.
 """
+import os
 import hmac
 import hashlib
 import json
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request, Header
+from fastapi import APIRouter, HTTPException, Request, Header, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from pydantic import BaseModel
 
-from app.core.config import settings
-from app.core.database import get_db
-from app.models import GenerationToken, PaymentTransaction
-from app.schemas.payment import Product, CreateCheckoutRequest, CreateCheckoutResponse
+from ...database import get_db
+from ...models.token import GenerationToken
+
+# Creem configuration
+CREEM_API_KEY = os.getenv("CREEM_API_KEY", "")
+CREEM_WEBHOOK_SECRET = os.getenv("CREEM_WEBHOOK_SECRET", "")
+
+# Product configuration
+PRODUCTS = {
+    "pack_5": {"price": 499, "generations": 5, "creem_product_id": os.getenv("CREEM_PRODUCT_5", "")},
+    "pack_15": {"price": 999, "generations": 15, "creem_product_id": os.getenv("CREEM_PRODUCT_15", "")},
+}
 
 
 def get_creem_api_base():
     """Use test API for test keys, production API for live keys."""
-    if settings.CREEM_API_KEY.startswith("creem_test_"):
+    if CREEM_API_KEY.startswith("creem_test_"):
         return "https://test-api.creem.io/v1"
     return "https://api.creem.io/v1"
 
@@ -26,51 +35,58 @@ def get_creem_api_base():
 router = APIRouter()
 
 
+# === Schemas ===
+
+class Product(BaseModel):
+    sku: str
+    name: str
+    price_cents: int
+    generations: int
+
+
+class CreateCheckoutRequest(BaseModel):
+    product_sku: str
+    device_id: str
+    success_url: str
+    optional_email: str | None = None
+
+
+class CreateCheckoutResponse(BaseModel):
+    checkout_url: str
+    session_id: str
+
+
+# === Routes ===
+
 @router.get("/payment/products", response_model=list[Product])
 async def get_products():
     """Get available product packages."""
-    products = []
-    for sku, info in settings.PRODUCTS.items():
-        products.append(
-            Product(
-                sku=sku,
-                name=sku.replace("_", " ").title(),
-                price_cents=info["price"],
-                generations=info["generations"],
-                discount_percent=_calculate_discount(sku) if len(settings.PRODUCTS) > 1 else None,
-            )
+    return [
+        Product(
+            sku=sku,
+            name=sku.replace("_", " ").title(),
+            price_cents=info["price"],
+            generations=info["generations"],
         )
-    return products
-
-
-def _calculate_discount(sku: str) -> int | None:
-    """Calculate discount vs cheapest per-unit price."""
-    if len(settings.PRODUCTS) < 2:
-        return None
-    per_unit_prices = {
-        k: v["price"] / v["generations"] for k, v in settings.PRODUCTS.items()
-    }
-    max_per_unit = max(per_unit_prices.values())
-    this_per_unit = per_unit_prices[sku]
-    if this_per_unit >= max_per_unit:
-        return None
-    return int(((max_per_unit - this_per_unit) / max_per_unit) * 100)
+        for sku, info in PRODUCTS.items()
+        if info.get("creem_product_id")  # Only return configured products
+    ]
 
 
 @router.post("/payment/create-checkout", response_model=CreateCheckoutResponse)
-async def create_checkout(
-    request: CreateCheckoutRequest,
-    db: AsyncSession = Depends(get_db),
-):
+async def create_checkout(request: CreateCheckoutRequest):
     """Create a Creem checkout session."""
-    if request.product_sku not in settings.PRODUCTS:
+    if request.product_sku not in PRODUCTS:
         raise HTTPException(status_code=400, detail="Invalid product SKU")
 
-    creem_product_id = settings.CREEM_PRODUCT_IDS.get(request.product_sku)
+    product = PRODUCTS[request.product_sku]
+    creem_product_id = product.get("creem_product_id")
+    
     if not creem_product_id:
         raise HTTPException(status_code=400, detail="Product not configured in Creem")
-
-    product = settings.PRODUCTS[request.product_sku]
+    
+    if not CREEM_API_KEY:
+        raise HTTPException(status_code=500, detail="Payment not configured")
 
     try:
         async with httpx.AsyncClient() as client:
@@ -90,7 +106,7 @@ async def create_checkout(
                 f"{get_creem_api_base()}/checkouts",
                 headers={
                     "Content-Type": "application/json",
-                    "x-api-key": settings.CREEM_API_KEY,
+                    "x-api-key": CREEM_API_KEY,
                 },
                 json=payload,
                 timeout=30.0,
@@ -127,8 +143,11 @@ async def creem_webhook(
     """Handle Creem webhook events."""
     payload = await request.body()
 
+    if not CREEM_WEBHOOK_SECRET:
+        raise HTTPException(status_code=500, detail="Webhook not configured")
+
     if not creem_signature or not verify_creem_signature(
-        payload, creem_signature, settings.CREEM_WEBHOOK_SECRET
+        payload, creem_signature, CREEM_WEBHOOK_SECRET
     ):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
@@ -146,11 +165,9 @@ async def creem_webhook(
 
 
 async def _handle_checkout_completed(event: dict, db: AsyncSession):
-    """Handle successful checkout — create token + record transaction."""
+    """Handle successful checkout — create token."""
     obj = event.get("object", {})
     metadata = obj.get("metadata", {})
-    customer = obj.get("customer", {})
-    order = obj.get("order", {})
 
     product_sku = metadata.get("product_sku")
     device_id = metadata.get("device_id")
@@ -163,19 +180,57 @@ async def _handle_checkout_completed(event: dict, db: AsyncSession):
         device_id=device_id,
     )
     db.add(token)
-    await db.flush()  # flush to get token.id before creating transaction
-
-    # Record transaction
-    transaction = PaymentTransaction(
-        token_id=token.id,
-        product_sku=product_sku,
-        provider="creem",
-        provider_transaction_id=obj.get("id"),
-        amount_cents=order.get("amount"),
-        currency=order.get("currency", "usd"),
-        status="succeeded",
-        device_id=device_id,
-        optional_email=customer.get("email"),
-    )
-    db.add(transaction)
     await db.commit()
+
+
+# === Token Routes ===
+
+@router.get("/tokens/by-device/{device_id}")
+async def get_tokens_by_device(device_id: str, db: AsyncSession = Depends(get_db)):
+    """Get remaining generations for a device."""
+    result = await db.execute(
+        select(GenerationToken)
+        .where(GenerationToken.device_id == device_id)
+        .where(GenerationToken.is_active == True)
+        .where(GenerationToken.remaining_generations > 0)
+    )
+    tokens = result.scalars().all()
+    
+    total_remaining = sum(t.remaining_generations for t in tokens)
+    
+    return {
+        "device_id": device_id,
+        "remaining_generations": total_remaining,
+        "tokens": [
+            {
+                "token": t.token[:8] + "...",
+                "remaining": t.remaining_generations,
+                "total": t.total_generations,
+            }
+            for t in tokens
+        ],
+    }
+
+
+@router.post("/tokens/consume")
+async def consume_token(device_id: str, db: AsyncSession = Depends(get_db)):
+    """Consume one generation from device's tokens."""
+    result = await db.execute(
+        select(GenerationToken)
+        .where(GenerationToken.device_id == device_id)
+        .where(GenerationToken.is_active == True)
+        .where(GenerationToken.remaining_generations > 0)
+        .order_by(GenerationToken.created_at)
+        .limit(1)
+    )
+    token = result.scalar_one_or_none()
+    
+    if not token:
+        raise HTTPException(status_code=402, detail="No generations available")
+    
+    if not token.consume():
+        raise HTTPException(status_code=402, detail="Token expired or exhausted")
+    
+    await db.commit()
+    
+    return {"remaining": token.remaining_generations}

@@ -69,14 +69,19 @@ async def track_requests(request: Request, call_next):
     return response
 
 
+# Database initialization
+from .database import init_db
+from .api.v1 import payment
+
+@app.on_event("startup")
+async def startup():
+    """Initialize database on startup."""
+    await init_db()
+
 # Routes
 app.include_router(metrics_router)
 app.include_router(next_step.router, prefix="/api/v1", tags=["Next Step"])
-
-# TODO: Add payment routes after database setup
-# from .api.v1 import payment, tokens
-# app.include_router(payment.router, prefix="/api/v1", tags=["Payment"])
-# app.include_router(tokens.router, prefix="/api/v1", tags=["Tokens"])
+app.include_router(payment.router, prefix="/api/v1", tags=["Payment"])
 
 
 @app.get("/health")

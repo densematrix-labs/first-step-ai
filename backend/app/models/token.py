@@ -1,52 +1,50 @@
 """
-GenerationToken Model — Token-based usage tracking.
-Copy to: backend/app/models/token.py
+Generation Token model for tracking user credits.
 """
-import uuid
-from datetime import datetime, timedelta
-from sqlalchemy import Column, String, Integer, DateTime
-from sqlalchemy.dialects.postgresql import UUID
+import secrets
+from datetime import datetime, timezone
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship
 
-from app.core.database import Base
+from ..database import Base
 
 
 class GenerationToken(Base):
     __tablename__ = "generation_tokens"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    token = Column(String(255), unique=True, nullable=False, index=True)
-    product_sku = Column(String(50), nullable=False)
+    id = Column(Integer, primary_key=True)
+    token = Column(String(64), unique=True, nullable=False, index=True)
+    device_id = Column(String(64), nullable=False, index=True)
+    product_sku = Column(String(32), nullable=False)
     total_generations = Column(Integer, nullable=False)
     remaining_generations = Column(Integer, nullable=False)
-    expires_at = Column(DateTime, nullable=False, index=True)
-    device_id = Column(String(255), index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    # Add relationships as needed:
-    # generations = relationship("YourGenerationModel", back_populates="token")
-    transactions = relationship("PaymentTransaction", back_populates="token")
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at = Column(DateTime(timezone=True), nullable=True)  # None = no expiry
+    is_active = Column(Boolean, default=True)
 
     @classmethod
-    def create_token(cls, product_sku: str, generations: int, device_id: str = None):
-        """Create a new token with 1 year validity."""
+    def create_token(
+        cls,
+        product_sku: str,
+        generations: int,
+        device_id: str,
+        expires_at: datetime | None = None,
+    ) -> "GenerationToken":
+        """Create a new generation token."""
         return cls(
-            token=f"tok_{uuid.uuid4().hex}",
+            token=secrets.token_urlsafe(32),
+            device_id=device_id,
             product_sku=product_sku,
             total_generations=generations,
             remaining_generations=generations,
-            expires_at=datetime.utcnow() + timedelta(days=365),
-            device_id=device_id,
+            expires_at=expires_at,
         )
 
-    def use_generation(self) -> bool:
+    def consume(self) -> bool:
         """Consume one generation. Returns True if successful."""
-        if self.remaining_generations > 0 and datetime.utcnow() < self.expires_at:
-            self.remaining_generations -= 1
-            return True
-        return False
-
-    @property
-    def is_valid(self) -> bool:
-        return self.remaining_generations > 0 and datetime.utcnow() < self.expires_at
+        if self.remaining_generations <= 0:
+            return False
+        if self.expires_at and datetime.now(timezone.utc) > self.expires_at:
+            return False
+        self.remaining_generations -= 1
+        return True
